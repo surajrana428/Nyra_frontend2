@@ -468,4 +468,147 @@ const AiGirlfriendApp = () => {
           <div className="space-y-4 mb-8">
             {[
               { icon: "💬", text: "Unlimited Messages" },
-              { icon: "📸", text: "Request
+             
+{ icon: "📸", text: "Request & Receive Photos" },
+              { icon: "🎯", text: "Advanced AI Personality" },
+              { icon: "🔒", text: "Private & Secure" }
+            ].map((benefit, index) => (
+              <div key={index} className="flex items-center space-x-3 bg-white/10 rounded-2xl p-4">
+                <div className="text-2xl">{benefit.icon}</div>
+                <div className="text-white font-medium">{benefit.text}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Payment Buttons */}
+          <div className="space-y-4">
+            <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold py-4 px-8 rounded-2xl text-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-2xl">
+              Pay with PayPal 💳
+            </button>
+            
+            <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-4 px-8 rounded-2xl text-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-2xl">
+              Pay with Stripe 💎
+            </button>
+          </div>
+
+          <div className="text-center mt-6">
+            <button
+              onClick={() => setCurrentScreen('modelSelection')}
+              className="text-pink-100 hover:text-white transition-colors"
+            >
+              ← Back to Models
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+};
+
+// Onboarding Input Component
+const OnboardingInput = ({ onSubmit, step }) => {
+  const [value, setValue] = useState('');
+
+  const handleSubmit = () => {
+    if (value.trim()) {
+      onSubmit(value.trim());
+      setValue('');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const getPlaceholder = () => {
+    switch(step) {
+      case 'nickname': return 'Give me a cute nickname... 💕';
+      case 'name': return 'Your name, handsome... 😘';
+      case 'hobbies': return 'Tell me your hobbies, babe... ✨';
+      default: return 'Type here...';
+    }
+  };
+
+  return (
+    <div className="flex space-x-3">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyPress={handleKeyPress}
+        placeholder={getPlaceholder()}
+        className="flex-1 bg-white/90 rounded-2xl px-6 py-4 text-gray-800 placeholder-gray-500 focus:outline-none focus:bg-white transition-all shadow-lg"
+        autoFocus
+      />
+      <button
+        onClick={handleSubmit}
+        disabled={!value.trim()}
+        className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-8 py-4 rounded-2xl font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+      >
+        Send 💕
+      </button>
+    </div>
+  );
+};
+
+// Chat Input Component
+const ChatInput = ({ value, onChange, onSend, onEmojiReaction, disabled }) => {
+  const handleSubmit = () => {
+    if (value.trim() && !disabled) {
+      onSend();
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {disabled && (
+        <div className="text-center text-pink-100 text-sm">
+          💔 Reached message limit - Upgrade to continue chatting
+        </div>
+      )}
+      
+      <div className="flex space-x-3">
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder={disabled ? "Upgrade to send more messages... 💔" : "Type your message... 💕"}
+          disabled={disabled}
+          className="flex-1 bg-white/90 rounded-2xl px-6 py-4 text-gray-800 placeholder-gray-500 focus:outline-none focus:bg-white transition-all shadow-lg resize-none"
+          rows="1"
+          style={{ minHeight: '60px' }}
+        />
+        
+        <div className="flex flex-col space-y-2">
+          <button
+            onClick={handleSubmit}
+            disabled={!value.trim() || disabled}
+            className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-4 rounded-2xl font-bold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+          >
+            💕
+          </button>
+          
+          <button
+            onClick={onEmojiReaction}
+            disabled={disabled}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-2xl font-bold hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+          >
+            😘
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AiGirlfriendApp;
