@@ -1,22 +1,55 @@
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 
+/** ---- utils: make localStorage safe on Vercel/Next SSR ---- */
+const isClient = () => typeof window !== 'undefined';
+const safeGet = (key, fallback = null) => {
+  if (!isClient()) return fallback;
+  try {
+    const v = window.localStorage.getItem(key);
+    return v === null ? fallback : v;
+  } catch {
+    return fallback;
+  }
+};
+const safeSet = (key, value) => {
+  if (!isClient()) return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {}
+};
+const safeParseJSON = (raw, fallback = null) => {
+  try {
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 const AiGirlfriendApp = () => {
-  const [currentScreen, setCurrentScreen] = useState(() => localStorage.getItem('agf_currentScreen') || 'modelSelection');
-  const [selectedModel, setSelectedModel] = useState(() => {
-    const raw = localStorage.getItem('agf_selectedModel');
-    return raw ? JSON.parse(raw) : null;
-  });
-  const [userName, setUserName] = useState(() => localStorage.getItem('agf_userName') || '');
-  const [userHobbies, setUserHobbies] = useState(() => localStorage.getItem('agf_userHobbies') || '');
-  const [nickname, setNickname] = useState(() => localStorage.getItem('agf_nickname') || '');
-  const [messages, setMessages] = useState(() => {
-    const raw = localStorage.getItem('agf_messages');
-    return raw ? JSON.parse(raw) : [];
-  });
-  const [messageCount, setMessageCount] = useState(() => Number(localStorage.getItem('agf_messageCount') || 0));
+  // -------- Persistent state (safe on SSR) --------
+  const [currentScreen, setCurrentScreen] = useState(
+    () => safeGet('agf_currentScreen', 'modelSelection') || 'modelSelection'
+  );
+  const [selectedModel, setSelectedModel] = useState(() =>
+    safeParseJSON(safeGet('agf_selectedModel'), null)
+  );
+  const [userName, setUserName] = useState(() => safeGet('agf_userName', '') || '');
+  const [userHobbies, setUserHobbies] = useState(() => safeGet('agf_userHobbies', '') || '');
+  const [nickname, setNickname] = useState(() => safeGet('agf_nickname', '') || '');
+  const [messages, setMessages] = useState(() =>
+    safeParseJSON(safeGet('agf_messages'), []) || []
+  );
+  const [messageCount, setMessageCount] = useState(() =>
+    Number(safeGet('agf_messageCount', '0') || 0)
+  );
+  const [onboardingStep, setOnboardingStep] = useState(
+    () => safeGet('agf_onboardingStep', 'nickname') || 'nickname'
+  );
+
+  // UI state
   const [isTyping, setIsTyping] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
-  const [onboardingStep, setOnboardingStep] = useState(() => localStorage.getItem('agf_onboardingStep') || 'nickname');
 
   // UPGRADE: store what she was about to say when we hit paywall
   const [queuedAiReply, setQueuedAiReply] = useState('');
@@ -41,30 +74,14 @@ const AiGirlfriendApp = () => {
   ];
 
   // -------- Persistence --------
-  useEffect(() => {
-    localStorage.setItem('agf_currentScreen', currentScreen);
-  }, [currentScreen]);
-  useEffect(() => {
-    if (selectedModel) localStorage.setItem('agf_selectedModel', JSON.stringify(selectedModel));
-  }, [selectedModel]);
-  useEffect(() => {
-    localStorage.setItem('agf_userName', userName);
-  }, [userName]);
-  useEffect(() => {
-    localStorage.setItem('agf_userHobbies', userHobbies);
-  }, [userHobbies]);
-  useEffect(() => {
-    localStorage.setItem('agf_nickname', nickname);
-  }, [nickname]);
-  useEffect(() => {
-    localStorage.setItem('agf_messages', JSON.stringify(messages));
-  }, [messages]);
-  useEffect(() => {
-    localStorage.setItem('agf_messageCount', String(messageCount));
-  }, [messageCount]);
-  useEffect(() => {
-    localStorage.setItem('agf_onboardingStep', onboardingStep);
-  }, [onboardingStep]);
+  useEffect(() => { safeSet('agf_currentScreen', currentScreen); }, [currentScreen]);
+  useEffect(() => { if (selectedModel) safeSet('agf_selectedModel', JSON.stringify(selectedModel)); }, [selectedModel]);
+  useEffect(() => { safeSet('agf_userName', userName); }, [userName]);
+  useEffect(() => { safeSet('agf_userHobbies', userHobbies); }, [userHobbies]);
+  useEffect(() => { safeSet('agf_nickname', nickname); }, [nickname]);
+  useEffect(() => { safeSet('agf_messages', JSON.stringify(messages)); }, [messages]);
+  useEffect(() => { safeSet('agf_messageCount', String(messageCount)); }, [messageCount]);
+  useEffect(() => { safeSet('agf_onboardingStep', onboardingStep); }, [onboardingStep]);
 
   // -------- Copy / Replies --------
   const getOnboardingResponse = (step) => {
@@ -221,10 +238,8 @@ const AiGirlfriendApp = () => {
 
     // If this *was* the 10th message, tease then paywall
     if (messageCount + 1 >= 10) {
-      // store what she was going to say
       setQueuedAiReply(aiReply);
       simulateTyping(() => {
-        // show last free reply, then slide to paywall
         addMessage(aiReply, 'ai');
         setTimeout(() => setCurrentScreen('paywall'), 1200);
       }, aiReply);
@@ -241,8 +256,7 @@ const AiGirlfriendApp = () => {
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
     simulateTyping(() => addMessage(randomEmoji, 'ai', true), randomEmoji);
   };
-
-  // -------- Screens --------
+// -------- Screens --------
   if (currentScreen === 'modelSelection') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 p-4">
@@ -407,7 +421,7 @@ const AiGirlfriendApp = () => {
                     {q}
                   </button>
                 ))}
-/div>
+              </div>
             )}
 
             {currentScreen === 'onboarding' ? (
@@ -426,8 +440,7 @@ const AiGirlfriendApp = () => {
       </div>
     );
   }
-
-  // Paywall with blurred teaser (UPGRADE)
+// Paywall with blurred teaser (UPGRADE)
   if (currentScreen === 'paywall') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600 flex items-center justify-center p-4">
@@ -629,3 +642,5 @@ const ChatInput = ({ value, onChange, onSend, onEmojiReaction, disabled }) => {
     </div>
   );
 };
+
+export default AiGirlfriendApp;
