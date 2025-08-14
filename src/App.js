@@ -418,11 +418,11 @@ const AiGirlfriendApp = () => {
 ) : (
   <div>  {/* Added this wrapper */}
     <ChatInput
-      value={inputMessage}
-      onChange={setInputMessage}
-      onSend={handleSendMessage}
-      onEmojiReaction={addEmojiReaction}
-      disabled={messageCount >= 10}  {/* Fixed parentheses */}
+  value={inputMessage}
+  onChange={setInputMessage}
+  onSend={handleSendMessage}
+  onEmojiReaction={addEmojiReaction}
+  disabled={messageCount >= 10}
 />
 </div>
 )}
@@ -434,10 +434,13 @@ const AiGirlfriendApp = () => {
       <div className={`w-32 h-32 mx-auto mb-6 bg-gradient-to-r ${selectedModel?.color} rounded-full flex items-center justify-center text-6xl shadow-2xl animate-pulse`}>
         {selectedModel?.avatar}
       </div>
-            {selectedModel?.avatar}
-          </div>
 
-          <h2 className="text-2xl font-bold text-white mb-4">
+      <h2 className="text-2xl font-bold text-white mb-4">
+        {/* Your paywall content here */}
+      </h2>
+    </div>
+  </div>
+)}
             {nickname || selectedModel?.name} was about to say…
           </h2>
 
