@@ -411,36 +411,32 @@ const AiGirlfriendApp = () => {
             )}
 
             {currentScreen === 'onboarding' ? (
-  <OnboardingInput 
-    onSubmit={handleOnboardingSubmit} 
-    step={onboardingStep} 
-  />
-) : (
-  <div>  {/* Added this wrapper */}
-    <ChatInput
-  value={inputMessage}
-  onChange={setInputMessage}
-  onSend={handleSendMessage}
-  onEmojiReaction={addEmojiReaction}
-  disabled={messageCount >= 10}
-/>
-</div>
-)}
-
-{/* Paywall section */}
-{currentScreen === 'paywall' && (
-  <div className="min-h-screen bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600 flex items-center justify-center p-4">
-    <div className="max-w-md w-full bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 text-center">
-      <div className={`w-32 h-32 mx-auto mb-6 bg-gradient-to-r ${selectedModel?.color} rounded-full flex items-center justify-center text-6xl shadow-2xl animate-pulse`}>
-        {selectedModel?.avatar}
+              <OnboardingInput onSubmit={handleOnboardingSubmit} step={onboardingStep} />
+            ) : (
+              <ChatInput
+                value={inputMessage}
+                onChange={setInputMessage}
+                onSend={handleSendMessage}
+                onEmojiReaction={addEmojiReaction}
+                disabled={messageCount >= 10}
+              />
+            )}
+          </div>
+        </div>
       </div>
+    );
+  }
 
-      <h2 className="text-2xl font-bold text-white mb-4">
-        {/* Your paywall content here */}
-      </h2>
-    </div>
-  </div>
-)}
+  // Paywall with blurred teaser (UPGRADE)
+  if (currentScreen === 'paywall') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 text-center">
+          <div className={`w-32 h-32 mx-auto mb-6 bg-gradient-to-r ${selectedModel?.color} rounded-full flex items-center justify-center text-6xl shadow-2xl animate-pulse`}>
+            {selectedModel?.avatar}
+          </div>
+
+          <h2 className="text-2xl font-bold text-white mb-4">
             {nickname || selectedModel?.name} was about to say…
           </h2>
 
@@ -633,5 +629,3 @@ const ChatInput = ({ value, onChange, onSend, onEmojiReaction, disabled }) => {
     </div>
   );
 };
-
-export default AiGirlfriendAp
