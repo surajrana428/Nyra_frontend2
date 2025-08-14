@@ -426,13 +426,11 @@ const AiGirlfriendApp = () => {
     />
   </div>
 )}
-  }
 
-  // Paywall with blurred teaser (UPGRADE)
-  if (currentScreen === 'paywall') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 text-center">
+{/* Paywall section */}
+{currentScreen === 'paywall' && (
+  <div className="min-h-screen bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600 flex items-center justify-center p-4">
+    <div className="max-w-md w-full bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 text-center">
           <div className={`w-32 h-32 mx-auto mb-6 bg-gradient-to-r ${selectedModel?.color} rounded-full flex items-center justify-center text-6xl shadow-2xl animate-pulse`}>
             {selectedModel?.avatar}
           </div>
