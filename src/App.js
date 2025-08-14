@@ -411,20 +411,21 @@ const AiGirlfriendApp = () => {
             )}
 
             {currentScreen === 'onboarding' ? (
-              <OnboardingInput onSubmit={handleOnboardingSubmit} step={onboardingStep} />
-            ) : (
-              <ChatInput
-                value={inputMessage}
-                onChange={setInputMessage}
-                onSend={handleSendMessage}
-                onEmojiReaction={addEmojiReaction}
-                disabled={messageCount >= 10}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
+  <OnboardingInput 
+    onSubmit={handleOnboardingSubmit} 
+    step={onboardingStep} 
+  />
+) : (
+  <div>  {/* Added this wrapper */}
+    <ChatInput
+      value={inputMessage}
+      onChange={setInputMessage}
+      onSend={handleSendMessage}
+      onEmojiReaction={addEmojiReaction}
+      disabled={messageCount >= 10}  {/* Fixed parentheses */}
+    />
+  </div>
+)}
   }
 
   // Paywall with blurred teaser (UPGRADE)
