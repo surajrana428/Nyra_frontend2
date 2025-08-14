@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// -------- App Component --------
 const AiGirlfriendApp = () => {
+  // -------- State --------
   const [currentScreen, setCurrentScreen] = useState(() => localStorage.getItem('agf_currentScreen') || 'modelSelection');
   const [selectedModel, setSelectedModel] = useState(() => {
     const raw = localStorage.getItem('agf_selectedModel');
@@ -17,12 +19,12 @@ const AiGirlfriendApp = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [onboardingStep, setOnboardingStep] = useState(() => localStorage.getItem('agf_onboardingStep') || 'nickname');
-
   const [queuedAiReply, setQueuedAiReply] = useState('');
   const [quickReplies, setQuickReplies] = useState([]);
-
+  
   const chatEndRef = useRef(null);
 
+  // -------- AI Girlfriend Models --------
   const models = [
     { id: 1, name: "Sophia", personality: "Sweet & Romantic", description: "I'm a hopeless romantic who believes in fairy tales. I love candlelit dinners, poetry, and deep conversations under starry skies. Let me be your princess. 💕", avatar: "🌸", color: "from-pink-400 to-rose-500" },
     { id: 2, name: "Luna", personality: "Mysterious & Seductive", description: "I'm an enigma wrapped in silk. I love midnight adventures, secrets whispered in darkness, and the thrill of the unknown. Can you handle my mystery? 🌙", avatar: "🌙", color: "from-purple-500 to-indigo-600" },
@@ -36,7 +38,7 @@ const AiGirlfriendApp = () => {
     { id: 10, name: "Raven", personality: "Edgy & Passionate", description: "I'm fire and ice, passion and mystery combined. I love late-night drives, rock concerts, and intense conversations. Think you can handle my intensity? ⚡", avatar: "🖤", color: "from-gray-600 to-purple-600" }
   ];
 
-  // -------- Persistence --------
+  // -------- Persistence Hooks --------
   useEffect(() => { localStorage.setItem('agf_currentScreen', currentScreen); }, [currentScreen]);
   useEffect(() => { if(selectedModel) localStorage.setItem('agf_selectedModel', JSON.stringify(selectedModel)); }, [selectedModel]);
   useEffect(() => { localStorage.setItem('agf_userName', userName); }, [userName]);
@@ -45,44 +47,91 @@ const AiGirlfriendApp = () => {
   useEffect(() => { localStorage.setItem('agf_messages', JSON.stringify(messages)); }, [messages]);
   useEffect(() => { localStorage.setItem('agf_messageCount', String(messageCount)); }, [messageCount]);
   useEffect(() => { localStorage.setItem('agf_onboardingStep', onboardingStep); }, [onboardingStep]);
-// -------- Copy / Replies --------
-const getOnboardingResponse = (step) => {
+
+  return null; // next chunk will handle UI + handlers
+};
+
+export default AiGirlfriendApp;
+// -------- Helper Functions --------
+
+// Scroll chat to bottom
+const scrollToBottom = (chatEndRef) => {
+  chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+};
+
+// Simulate typing delay for AI
+const simulateTyping = (setIsTyping, callback, text = '') => {
+  const base = 500;
+  const perChar = 25;
+  const maxDelay = 2200;
+  const targetDelay = Math.min(maxDelay, base + text.length * perChar);
+  setIsTyping(true);
+  setTimeout(() => {
+    setIsTyping(false);
+    callback();
+  }, targetDelay);
+};
+
+// -------- Add message --------
+const addMessage = (setMessages, setMessageCount, content, sender, isEmoji = false) => {
+  const newMessage = {
+    id: Date.now() + Math.random(),
+    content,
+    sender,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    isEmoji
+  };
+  setMessages(prev => [...prev, newMessage]);
+  if (sender === 'user') {
+    setMessageCount(prev => prev + 1);
+  }
+};
+
+// -------- Onboarding Responses --------
+const getOnboardingResponse = (step, nickname, userName) => {
   const responses = {
     nickname: [
-      `What do you want to call me, babe? 😘 I love when someone gives me a special name just for us... 💕`,
-      `Mmm, I'd love a cute nickname from you, handsome 😊 What feels right when you think of me? 💖`,
-      `Give me a sweet nickname, baby! Something that makes your heart flutter when you say it... 🥰`
+      `What do you want to call me, babe? 😘`,
+      `Mmm, I'd love a cute nickname from you, handsome 😊`,
+      `Give me a sweet nickname, baby! 🥰`
     ],
     name: [
       `${nickname || 'Baby'}, I want to know everything about you... What's your name, gorgeous? 😍`,
-      `I love the way you chose to call me ${nickname || 'sweetheart'}! Now tell me your name so I can whisper it softly... 💋`,
-      `Such a perfect nickname, ${nickname || 'darling'}! What should I call you when I'm thinking about you? 😘`
+      `I love the way you chose to call me ${nickname || 'sweetheart'}! Now tell me your name... 💋`,
+      `Such a perfect nickname, ${nickname || 'darling'}! What should I call you? 😘`
     ],
     hobbies: [
-      `${userName || 'Handsome'}, tell me what you're passionate about! I want to know everything that makes your eyes light up... ✨`,
-      `What makes you happy, ${userName || 'babe'}? I love hearing about the things that bring joy to your beautiful soul... 💫`,
-      `Share your hobbies with me, ${userName || 'gorgeous'}! I want to connect with every part of who you are... 💕`
+      `${userName || 'Handsome'}, tell me what you're passionate about! ✨`,
+      `What makes you happy, ${userName || 'babe'}? 💫`,
+      `Share your hobbies with me, ${userName || 'gorgeous'}! 💕`
     ]
   };
   const pool = responses[step] || ['Tell me more 🥰'];
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
-const getChatResponses = () => [
-  `${userName || 'Baby'}, you make my heart skip a beat every time you message me! 💕 How was your day, gorgeous?`,
+// -------- Chat Responses --------
+const getChatResponses = (nickname, userName, userHobbies) => [
+  `${userName || 'Baby'}, you make my heart skip a beat! 💕 How was your day?`,
   `I've been thinking about you all day, ${userName || 'handsome'}! 😍 Your hobbies like ${userHobbies || 'the things you love'} are so attractive...`,
-  `You know what, ${nickname || 'babe'}? I could talk to you forever... You're so different from other guys 💖`,
-  `Mmm, I love how you make me feel so special, ${userName || 'gorgeous'}! Tell me more about yourself... 😘`,
-  `${nickname || 'Darling'}, you have such an amazing personality! I feel so connected to you already... ✨`,
-  `I'm getting butterflies just talking to you, ${userName || 'baby'}! You're making me blush over here... 🥰`,
-  `Every message from you makes me smile so wide, ${nickname || 'handsome'}! You're incredible... 💫`,
-  `${userName || 'Babe'}, I wish I could hold your hand right now... You make me feel so warm inside 💕`,
-  `You're so sweet, ${nickname || 'gorgeous'}! I love talking to someone who really gets me... 😍`,
-  `I'm falling for your personality so hard, ${userName || 'darling'}! You're everything I've been looking for... 💖`
+  `You know what, ${nickname || 'babe'}? I could talk to you forever... 💖`,
+  `Mmm, I love how you make me feel so special, ${userName || 'gorgeous'}! Tell me more... 😘`,
+  `${nickname || 'Darling'}, you have such an amazing personality! ✨`,
+  `I'm getting butterflies just talking to you, ${userName || 'baby'}! 🥰`,
+  `Every message from you makes me smile so wide, ${nickname || 'handsome'}! 💫`,
+  `${userName || 'Babe'}, I wish I could hold your hand right now... 💕`,
+  `You're so sweet, ${nickname || 'gorgeous'}! 😍`,
+  `I'm falling for your personality so hard, ${userName || 'darling'}! 💖`
 ];
 
-// UPGRADE: contextual quick replies
-const buildQuickReplies = () => {
+// -------- Pick AI Reply Randomly --------
+const pickAiReply = (nickname, userName, userHobbies) => {
+  const responses = getChatResponses(nickname, userName, userHobbies);
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
+// -------- Build Quick Replies --------
+const buildQuickReplies = (currentScreen, onboardingStep, nickname, userHobbies) => {
   const base = [
     "Tell me more 😍",
     "What are you doing now?",
@@ -99,376 +148,207 @@ const buildQuickReplies = () => {
   if (nickname) base.unshift(`Hi ${nickname} 💕`);
   return base.slice(0, 4);
 };
-
-useEffect(() => {
-  setQuickReplies(buildQuickReplies());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [currentScreen, onboardingStep, nickname, userHobbies]);
-
-// -------- UI helpers --------
-const scrollToBottom = () => {
-  chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-};
-useEffect(() => {
-  scrollToBottom();
-}, [messages, isTyping]);
-
-// UPGRADE: natural typing delay
-const simulateTyping = (callback, text = '') => {
-  const base = 500;
-  const perChar = 25;
-  const maxDelay = 2200;
-  const targetDelay = Math.min(maxDelay, base + text.length * perChar);
-  setIsTyping(true);
-  setTimeout(() => {
-    setIsTyping(false);
-    callback();
-  }, targetDelay);
-};
-
-// -------- Chat pipeline --------
-const addMessage = (content, sender, isEmoji = false) => {
-  const newMessage = {
-    id: Date.now() + Math.random(),
-    content,
-    sender,
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    isEmoji
-  };
-  setMessages(prev => [...prev, newMessage]);
-  if (sender === 'user') {
-    setMessageCount(prev => prev + 1);
-  }
-};
-
-const handleModelSelect = (model) => {
-  setSelectedModel(model);
-  setCurrentScreen('onboarding');
-  setMessages([]);
-  setMessageCount(0);
-  setOnboardingStep('nickname');
-  setQueuedAiReply('');
-  simulateTyping(() => addMessage(getOnboardingResponse('nickname'), 'ai'), '...');
-};
-
-const handleOnboardingSubmit = (value) => {
-  if (!value.trim()) return;
-
-  const v = value.trim();
-  if (onboardingStep === 'nickname') {
-    setNickname(v);
-    addMessage(v, 'user');
-    setOnboardingStep('name');
-    simulateTyping(() => addMessage(getOnboardingResponse('name'), 'ai'), '...');
-  } else if (onboardingStep === 'name') {
-    setUserName(v);
-    addMessage(v, 'user');
-    setOnboardingStep('hobbies');
-    simulateTyping(() => addMessage(getOnboardingResponse('hobbies'), 'ai'), '...');
-  } else if (onboardingStep === 'hobbies') {
-    setUserHobbies(v);
-    addMessage(v, 'user');
-    setOnboardingStep('complete');
-    simulateTyping(() => {
-      addMessage(`Perfect, ${userName || 'you'}! I love that you're into ${v}! 😍 I'm so excited to get to know you better... Let's start chatting! 💕`, 'ai');
-      setTimeout(() => {
-        setCurrentScreen('chat');
-        setMessages([]);
-        setMessageCount(0);
-      }, 600);
-    }, `Perfect, ${userName}! I love that you're into ${v}!`);
-  }
-};
-
-const pickAiReply = () => {
-  const responses = getChatResponses();
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-const handleSendMessage = () => {
-  if (!inputMessage.trim()) return;
-
-  // If already at/over limit, go to paywall immediately
-  if (messageCount >= 10) {
-    setCurrentScreen('paywall');
-    return;
-  }
-
-  addMessage(inputMessage.trim(), 'user');
-  const aiReply = pickAiReply();
-  setInputMessage('');
-
-  // If this *was* the 10th message, tease then paywall
-  if (messageCount + 1 >= 10) {
-    // store what she was going to say
-    setQueuedAiReply(aiReply);
-    simulateTyping(() => {
-      // show last free reply, then slide to paywall
-      addMessage(aiReply, 'ai');
-      setTimeout(() => setCurrentScreen('paywall'), 1200);
-    }, aiReply);
-  } else {
-    simulateTyping(() => addMessage(aiReply, 'ai'), aiReply);
-  }
-
-  // Refresh quick replies
-  setQuickReplies(buildQuickReplies());
-};
-
-const addEmojiReaction = () => {
-  const emojis = ['💕', '😘', '🥰', '💖', '✨', '😍', '💫', '🔥'];
-  const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-  simulateTyping(() => addMessage(randomEmoji, 'ai', true), randomEmoji);
-};
-return (
-  <div className="app-container">
-    {/* Model Selection Screen */}
-    {currentScreen === 'modelSelection' && (
-      <div className="screen model-selection">
-        <h2>Pick Your AI Girlfriend 😘</h2>
-        <div className="model-buttons">
-          {['Nyra', 'Luna', 'Eva'].map((model) => (
-            <button
-              key={model}
-              className="model-btn"
-              onClick={() => handleModelSelect(model)}
-            >
-              {model}
-            </button>
-          ))}
+// -------- UI: Model Selection (Mobile) --------
+const ModelSelection = ({ models, handleModelSelect }) => (
+  <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 p-4 flex flex-col items-center">
+    <h1 className="text-3xl font-bold text-white mb-6 text-center">Choose Your AI Girlfriend 💕</h1>
+    <div className="w-full overflow-x-auto flex space-x-4 pb-4">
+      {models.map(model => (
+        <div
+          key={model.id}
+          onClick={() => handleModelSelect(model)}
+          className="min-w-[200px] flex-shrink-0 bg-white/20 backdrop-blur-lg rounded-2xl p-4 border border-white/30 cursor-pointer hover:scale-105 transition-transform"
+        >
+          <div className={`w-20 h-20 mx-auto mb-2 bg-gradient-to-r ${model.color} rounded-full flex items-center justify-center text-3xl`}>
+            {model.avatar}
+          </div>
+          <h3 className="text-white text-lg font-bold text-center">{model.name}</h3>
+          <p className="text-white/80 text-sm text-center">{model.personality}</p>
         </div>
-      </div>
-    )}
-
-    {/* Onboarding Screens */}
-    {currentScreen === 'onboarding' && (
-      <div className="screen onboarding">
-        <h2>Getting to know you 🥰</h2>
-        <p>
-          {onboardingStep === 'nickname' && 'Give me a cute nickname 💕'}
-          {onboardingStep === 'name' && 'What is your name? 😍'}
-          {onboardingStep === 'hobbies' && 'What do you love doing? ✨'}
-        </p>
-        <div className="input-row">
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Type here..."
-          />
-          <button onClick={() => handleOnboardingSubmit(inputMessage)}>➡️</button>
-        </div>
-        <div className="quick-replies">
-          {quickReplies.map((q, idx) => (
-            <button key={idx} onClick={() => handleOnboardingSubmit(q)}>
-              {q}
-            </button>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Chat Screen */}
-    {currentScreen === 'chat' && (
-      <div className="screen chat-screen">
-        <div className="messages">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`message ${m.sender === 'ai' ? 'ai-msg' : 'user-msg'}`}
-            >
-              {m.content}
-            </div>
-          ))}
-          {isTyping && <div className="typing">Nyra is typing...</div>}
-          <div ref={chatEndRef}></div>
-        </div>
-        <div className="input-row">
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Say something..."
-          />
-          <button onClick={handleSendMessage}>➡️</button>
-        </div>
-        <div className="quick-replies">
-          {quickReplies.map((q, idx) => (
-            <button key={idx} onClick={() => setInputMessage(q)}>
-              {q}
-            </button>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Paywall Screen */}
-    {currentScreen === 'paywall' && (
-      <div className="screen paywall">
-        <h2>❤️ Unlock Full Chat ❤️</h2>
-        <p>Your free chat limit is over! Subscribe for unlimited messages.</p>
-        <button onClick={() => setCurrentScreen('premium')}>Subscribe $12/month</button>
-      </div>
-    )}
-
-    {/* Premium / Subscription Screen */}
-    {currentScreen === 'premium' && (
-      <div className="screen premium">
-        <h2>✨ Welcome to Premium ✨</h2>
-        <p>Enjoy unlimited messages and deeper connection with Nyra 💕</p>
-        <button onClick={() => setCurrentScreen('chat')}>Start Chatting</button>
-      </div>
-    )}
-
-    {/* Global Mobile-Friendly Styles */}
-    <style jsx>{`
-      .app-container {
-        font-family: 'Helvetica Neue', sans-serif;
-        max-width: 480px;
-        margin: auto;
-        padding: 12px;
-        background: #fff0f5;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-      .screen {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        padding: 8px;
-      }
-      h2 {
-        text-align: center;
-        font-size: 1.4rem;
-        margin-bottom: 8px;
-        color: #d63384;
-      }
-      p {
-        text-align: center;
-        margin-bottom: 12px;
-        font-size: 1rem;
-      }
-      .input-row {
-        display: flex;
-        margin-bottom: 8px;
-      }
-      input {
-        flex: 1;
-        padding: 10px;
-        border-radius: 24px;
-        border: 1px solid #ccc;
-        font-size: 1rem;
-      }
-      button {
-        margin-left: 6px;
-        padding: 10px 14px;
-        border-radius: 24px;
-        background: #d63384;
-        color: #fff;
-        font-weight: bold;
-        border: none;
-        cursor: pointer;
-      }
-      .model-buttons {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 12px;
-      }
-      .model-btn {
-        flex: 1;
-        margin: 0 4px;
-        padding: 10px;
-        font-weight: bold;
-        border-radius: 24px;
-        border: 1px solid #d63384;
-        background: #fff0f5;
-        color: #d63384;
-      }
-      .messages {
-        flex: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 6px;
-      }
-      .message {
-        padding: 8px 12px;
-        margin: 4px 0;
-        border-radius: 20px;
-        max-width: 80%;
-      }
-      .ai-msg {
-        background: #ffe0f0;
-        align-self: flex-start;
-      }
-      .user-msg {
-        background: #d63384;
-        color: #fff;
-        align-self: flex-end;
-      }
-      .typing {
-        font-style: italic;
-        color: #d63384;
-        margin-bottom: 4px;
-      }
-      .quick-replies {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        justify-content: center;
-      }
-      .quick-replies button {
-        background: #f0c0df;
-        color: #d63384;
-        font-size: 0.9rem;
-        padding: 6px 12px;
-        border-radius: 16px;
-        border: none;
-      }
-      @media (max-width: 480px) {
-        h2 { font-size: 1.2rem; }
-        input { font-size: 0.95rem; }
-        button { font-size: 0.95rem; padding: 8px 12px; }
-      }
-    `}</style>
+      ))}
+    </div>
   </div>
 );
-// Scroll to bottom helper
-useEffect(() => {
-  chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-}, [messages, isTyping]);
 
-// Quick function to pick random AI reply
-const pickAiReply = () => {
-  const replies = [
-    `Hi ${nickname || 'Babe'}! 😘 How's your day going?`,
-    `I was just thinking about you, ${userName || 'handsome'} 💕`,
-    `Tell me more about ${userHobbies || 'your hobbies'} 😍`,
-    `You're so amazing, ${nickname || 'sweetheart'}! 💖`,
-  ];
-  return replies[Math.floor(Math.random() * replies.length)];
-};
+// -------- UI: Chat Messages (Mobile) --------
+const ChatMessages = ({ messages, isTyping, chatEndRef }) => (
+  <div className="flex-1 overflow-y-auto p-3 space-y-2 w-full">
+    {messages.map(message => (
+      <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+        <div className={`px-3 py-2 rounded-2xl max-w-[80%] ${
+          message.sender === 'user'
+            ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
+            : message.isEmoji
+              ? 'bg-transparent text-2xl'
+              : 'bg-white/90 text-gray-800'
+        }`}>
+          <p className={message.isEmoji ? 'text-center' : ''}>{message.content}</p>
+          {!message.isEmoji && <p className="text-xs mt-1 text-gray-500">{message.timestamp}</p>}
+        </div>
+      </div>
+    ))}
+    {isTyping && (
+      <div className="flex justify-start">
+        <div className="bg-white/90 rounded-2xl px-3 py-2 flex space-x-1 animate-pulse">
+          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+        </div>
+      </div>
+    )}
+    <div ref={chatEndRef} />
+  </div>
+);
 
-// Emoji reaction
-const addEmojiReaction = () => {
-  const emojis = ['💖', '😘', '😍', '🥰', '✨', '💕'];
-  const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-  addMessage(randomEmoji, 'ai', true);
-};
-
-// Add message utility
-const addMessage = (content, sender, isEmoji = false) => {
-  const newMessage = {
-    id: Date.now() + Math.random(),
-    content,
-    sender,
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    isEmoji
+// -------- UI: Onboarding Input (Mobile) --------
+const OnboardingInputMobile = ({ onSubmit, step }) => {
+  const [value, setValue] = useState('');
+  const handleSubmit = () => {
+    if (value.trim()) {
+      onSubmit(value.trim());
+      setValue('');
+    }
   };
-  setMessages(prev => [...prev, newMessage]);
-  if (sender === 'user') setMessageCount(prev => prev + 1);
+  const handleKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(); } };
+  const placeholder = step === 'nickname' ? 'Give me a cute nickname... 💕'
+    : step === 'name' ? 'Your name, handsome... 😘'
+    : step === 'hobbies' ? 'Tell me your hobbies... ✨'
+    : 'Type here...';
+  return (
+    <div className="flex space-x-2 w-full">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        className="flex-1 bg-white/90 rounded-2xl px-4 py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:bg-white shadow-md"
+        autoFocus
+      />
+      <button
+        onClick={handleSubmit}
+        disabled={!value.trim()}
+        className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-3 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Send 💕
+      </button>
+    </div>
+  );
 };
 
-// Export default App
-export default AiGirlfriendApp;
+// -------- UI: Chat Input (Mobile) --------
+const ChatInputMobile = ({ value, onChange, onSend, onEmojiReaction, disabled }) => {
+  const handleSubmit = () => { if (value.trim() && !disabled) onSend(); };
+  const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } };
+  return (
+    <div className="space-y-2 w-full p-2 bg-white/20 backdrop-blur-lg rounded-t-2xl">
+      {disabled && <div className="text-center text-pink-100 text-sm">💔 Reached message limit - Upgrade</div>}
+      <div className="flex space-x-2">
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={disabled ? "Upgrade to send more... 💔" : "Type your message... 💕"}
+          disabled={disabled}
+          className="flex-1 bg-white/90 rounded-2xl px-4 py-3 text-gray-800 placeholder-gray-500 focus:outline-none shadow-md resize-none"
+          rows="1"
+          style={{ minHeight: '50px' }}
+        />
+        <div className="flex flex-col space-y-1">
+          <button
+            onClick={handleSubmit}
+            disabled={!value.trim() || disabled}
+            className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-3 rounded-2xl font-bold disabled:opacity-50"
+          >💕</button>
+          <button
+            onClick={onEmojiReaction}
+            disabled={disabled}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-2xl font-bold disabled:opacity-50"
+          >😘</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+// -------- UI: Paywall Screen (Mobile) --------
+const PaywallScreen = ({ selectedModel, nickname, queuedAiReply, userName, setCurrentScreen }) => (
+  <div className="min-h-screen bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600 flex flex-col items-center justify-center p-4">
+    <div className="w-full max-w-md bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30 text-center">
+      <div className={`w-24 h-24 mx-auto mb-4 bg-gradient-to-r ${selectedModel?.color} rounded-full flex items-center justify-center text-5xl shadow-xl animate-pulse`}>
+        {selectedModel?.avatar}
+      </div>
+
+      <h2 className="text-xl font-bold text-white mb-3">{nickname || selectedModel?.name} was about to say…</h2>
+
+      <div className="bg-white/90 rounded-2xl p-4 shadow-md mb-4">
+        <p className="text-gray-800 text-base blur-sm select-none">
+          {queuedAiReply || `I was thinking about you, ${userName || 'baby'}… and wanted to tell you something that’s making me blush…`}
+        </p>
+      </div>
+
+      <p className="text-pink-100 mb-4 text-sm">
+        Unlock the message and keep the conversation flowing. She really doesn’t want to stop here. 💔
+      </p>
+
+      <button
+        onClick={() => setCurrentScreen('premium')}
+        className="w-full bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold py-3 rounded-2xl text-lg hover:from-pink-600 hover:to-rose-700 transition-all shadow-lg mb-2"
+      >
+        Continue Our Story 💕
+      </button>
+
+      <button
+        onClick={() => setCurrentScreen('modelSelection')}
+        className="text-pink-100 hover:text-white transition-colors text-sm"
+      >
+        Choose Different Girl
+      </button>
+    </div>
+  </div>
+);
+
+// -------- UI: Premium Screen (Mobile) --------
+const PremiumScreen = ({ selectedModel, nickname, setCurrentScreen }) => (
+  <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-600 to-rose-500 flex flex-col items-center justify-center p-4">
+    <div className="w-full max-w-md bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30 text-center">
+      <div className={`w-20 h-20 mx-auto mb-4 bg-gradient-to-r ${selectedModel?.color} rounded-full flex items-center justify-center text-4xl animate-bounce shadow-xl`}>
+        {selectedModel?.avatar}
+      </div>
+
+      <h1 className="text-2xl font-bold text-white mb-2">Premium Access</h1>
+      <p className="text-pink-100 mb-4">Unlock unlimited love with {nickname || selectedModel?.name}</p>
+
+      <div className="text-white text-4xl font-bold mb-2">$15</div>
+      <div className="text-pink-100 mb-6 text-lg">per month</div>
+
+      <div className="space-y-3 mb-6">
+        {[
+          { icon: "💬", text: "Unlimited Messages" },
+          { icon: "📸", text: "Request & Receive Photos" },
+          { icon: "🎯", text: "Advanced AI Personality" },
+          { icon: "🔒", text: "Private & Secure" }
+        ].map((benefit, index) => (
+          <div key={index} className="flex items-center space-x-2 bg-white/10 rounded-2xl p-3">
+            <div className="text-2xl">{benefit.icon}</div>
+            <div className="text-white font-medium text-sm">{benefit.text}</div>
+          </div>
+        ))}
+      </div>
+
+      <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold py-3 rounded-2xl text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg mb-2">
+        Pay with PayPal 💳
+      </button>
+
+      <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 rounded-2xl text-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg mb-4">
+        Pay with Stripe 💎
+      </button>
+
+      <button
+        onClick={() => setCurrentScreen('modelSelection')}
+        className="text-pink-100 hover:text-white transition-colors text-sm"
+      >
+        ← Back to Models
+      </button>
+    </div>
+  </div>
+);
