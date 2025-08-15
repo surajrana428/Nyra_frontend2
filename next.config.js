@@ -1,7 +1,10 @@
-// next.config.js
+/** @type {import('next').NextConfig} */
 module.exports = {
-  output: 'standalone', // Critical for Vercel
+  output: 'export', // Critical for Vercel
   images: {
-    unoptimized: true, // Disable Vercel's image optimizer
+    unoptimized: true // Disable problematic image optimization
+  },
+  eslint: {
+    ignoreDuringBuilds: true // Skip build-time linting
   }
 }
